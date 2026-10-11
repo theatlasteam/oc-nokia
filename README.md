@@ -1,19 +1,19 @@
-# OpenCode × Nokia 6300 — Bluetooth Voice Remote
+# OpenCode × Nokia 6300 — Bluetooth-пульт голосового управления
 
-Control [OpenCode](https://opencode.ai) from a real Nokia 6300 (Series 40,
-MIDP 2.0 / CLDC 1.1) over Bluetooth: hold a voice note on the phone →
-Groq Whisper transcribes it → the prompt runs in your OpenCode session →
-answers stream back live to the 240×320 screen.
+Управляйте [OpenCode](https://opencode.ai) с настоящего Nokia 6300
+(Series 40, MIDP 2.0 / CLDC 1.1) по Bluetooth: запишите голосовую заметку
+на телефоне → Groq Whisper расшифрует её → промпт выполняется в вашей
+сессии OpenCode → ответ транслируется в реальном времени на экран 240×320.
 
 ```
-Phone (J2ME MIDlet) --[BT SPP / TCP]--> PC bridge --> Groq Whisper --> OpenCode
+Телефон (J2ME MIDlet) --[BT SPP / TCP]--> мост на ПК --> Groq Whisper --> OpenCode
        ^------------------------------------------------------------------|
-                    live status, chat lines, tool activity
+              статус, строки чата, активность инструментов — вживую
 ```
 
-## Quick setup
+## Быстрая настройка
 
-### Linux (Debian/Ubuntu/Arch/Fedora/Void — auto-detected)
+### Linux (Debian/Ubuntu/Arch/Fedora/Void — определяется автоматически)
 
 ```sh
 ./setup.sh
@@ -22,7 +22,7 @@ Phone (J2ME MIDlet) --[BT SPP / TCP]--> PC bridge --> Groq Whisper --> OpenCode
 ### macOS
 
 ```sh
-./setup.sh          # same script; detects Darwin, uses Homebrew
+./setup.sh          # тот же скрипт; определяет Darwin и использует Homebrew
 ```
 
 ### Windows
@@ -31,140 +31,140 @@ Phone (J2ME MIDlet) --[BT SPP / TCP]--> PC bridge --> Groq Whisper --> OpenCode
 .\setup.ps1
 ```
 
-The setup script installs **bun**, **ffmpeg**, **JDK 8**, **ProGuard**
-(for CLDC preverify) and JS dependencies, then prints the next steps.
-Everything installs locally — no root needed except the package manager
-calls it makes on your behalf.
+Скрипт настройки устанавливает **bun**, **ffmpeg**, **JDK 8**,
+**ProGuard** (для CLDC preverify) и JS-зависимости, затем печатает
+следующие шаги. Всё ставится локально — root/sudo нужен только для
+вызова пакетного менеджера.
 
-### What setup does *not* do
+### Что скрипт настройки *не* делает
 
-* Pair the phone (do it once: phone BT **On + Visible**, then
-  `scripts/void-bt-setup.sh` on Linux, or pair from Bluetooth settings
-  on macOS/Windows).
-* Set `GROQ_API_KEY` (get one at console.groq.com, then
+* Не связывает телефон (сделайте один раз: на телефоне Bluetooth
+  **Включён + Видимый**, затем `scripts/void-bt-setup.sh` на Linux
+  либо пара из настроек Bluetooth на macOS/Windows).
+* Не задаёт `GROQ_API_KEY` (получите ключ на console.groq.com, затем
   `export GROQ_API_KEY=gsk_…`).
 
-## Run the stack
+## Запуск стека
 
 ```sh
 export GROQ_API_KEY=gsk_...
-./run-all.sh        # bridge (bun) + BT proxy (node) + dashboard
+./run-all.sh        # мост (bun) + BT-прокси (node) + веб-панель
 ```
 
-* Dashboard: http://127.0.0.1:4097/nokia
-* Phone-initiated: on the 6300 open **OpenCode Remote → Connect**
-  (direct-dials the PC, no inquiry needed).
-* PC-initiated: on the 6300 choose **Wait for PC**, then
+* Панель: http://127.0.0.1:4097/nokia
+* Инициатива от телефона: на 6300 откройте **OpenCode Remote → Connect**
+  (прямой набор ПК, поиск не нужен).
+* Инициатива от ПК: на 6300 выберите **Wait for PC**, затем
   `NOKIA_BT_ADDR=00:22:66:C8:4C:07 node scripts/bt-connect.js`.
 
-No Bluetooth on the PC (or testing in an emulator)? The bridge always
-listens on **TCP :19741** — point the phone at it with the `TcpHost`
-JAD property, or test with MicroEmulator over `socket://localhost:19741`.
+Нет Bluetooth на ПК (или тестируете в эмуляторе)? Мост всегда слушает
+**TCP :19741** — укажите его в JAD-свойстве `TcpHost` телефона или
+тестируйте через MicroEmulator по `socket://localhost:19741`.
 
-## Build the phone app
+## Сборка телефонного приложения
 
-Requirements: JDK 8 (`-source 1.3` support), ProGuard ≥ 7.4 (preverify),
-`jar`. All installed by `setup.sh`.
+Нужны: JDK 8 (поддержка `-source 1.3`), ProGuard ≥ 7.4 (preverify),
+`jar`. Всё это ставит `setup.sh`.
 
 ```sh
-./scripts/build-jar.sh     # stubs -> javac -> preverify -> jar/jad -> OBEX push
+./scripts/build-jar.sh     # заглушки -> javac -> preverify -> jar/jad -> OBEX-загрузка
 ```
 
-Output lands in `NokiaOpenCode/bin/` (`NokiaOpenCode.jar` + `.jad`).
-Prebuilt binaries are included in this repo — you can skip the build and
-OBEX-push them directly:
+Результат — в `NokiaOpenCode/bin/` (`NokiaOpenCode.jar` + `.jad`).
+Предсобранные бинарники уже лежат в этом репозитории — можно пропустить
+сборку и сразу загрузить их по OBEX:
 
 ```sh
 obexftp --bluetooth <PHONE_MAC> --put NokiaOpenCode/bin/NokiaOpenCode.jad
 obexftp --bluetooth <PHONE_MAC> --put NokiaOpenCode/bin/NokiaOpenCode.jar
 ```
 
-On the phone: open the `.jad` → Install → allow Bluetooth + Microphone.
-On S40: App. manager → OpenCode Remote → Permissions → set
-Bluetooth/Multimedia to **Always allowed**.
+На телефоне: открыть `.jad` → Установить → разрешить Bluetooth и
+микрофон. На S40: Менеджер приложений → OpenCode Remote → Разрешения →
+Bluetooth/Мультимедиа → **Всегда разрешать**.
 
-## Layout
+## Структура
 
 ```
-NokiaOpenCode/            Java ME MIDlet (Nokia 6300)
+NokiaOpenCode/            MIDlet для Java ME (Nokia 6300)
   src/com/nokia/opencode/   MIDlet, BTClient, AudioRecorder, Protocol, Ui
-  stub-src/                 MIDP/JSR-82/MMAPI API stubs (compile classpath)
-  res/                      logo PNGs
-  bin/                      prebuilt preverified jar + jad
-  build.xml                 WTK / Antenna build (alternative)
-opencode-nokia-plugin/    PC bridge + OpenCode plugin (server + TUI + web)
-  src/bridge.ts             BT SPP + TCP + Groq Whisper + OpenCode client
-  src/index.ts              server plugin (tool, command, RPC, lifecycle)
-  src/tui.tsx               TUI plugin (slot, route, palette, toasts)
-  src/rpc.ts                shared RPC contract (id "nokia")
-  web/dashboard.html        zero-dependency live dashboard
-  standalone-bridge.mjs     runs the bridge standalone (no plugin loader)
+  stub-src/                 заглушки MIDP/JSR-82/MMAPI (classpath для сборки)
+  res/                      логотипы PNG
+  bin/                      предсобранный preverified jar + jad
+  build.xml                 сборка через WTK / Antenna (альтернатива)
+opencode-nokia-plugin/    мост + плагин OpenCode на ПК (сервер + TUI + web)
+  src/bridge.ts             BT SPP + TCP + Groq Whisper + OpenCode-клиент
+  src/index.ts              серверный плагин (tool, command, RPC, lifecycle)
+  src/tui.tsx               TUI-плагин (статус-строка, route, палитра, toasts)
+  src/rpc.ts                общий контракт RPC (id "nokia")
+  web/dashboard.html        веб-панель без зависимостей, в реальном времени
+  standalone-bridge.mjs     запуск моста отдельно (без загрузчика плагина)
 scripts/
-  build-jar.sh              full phone-app build + push
-  run-all.sh                start bridge + proxy + dashboard
-  bt-proxy.js               BT SPP -> TCP :19741 proxy
-  bt-connect.js             PC-outgoing dial ("Wait for PC" mode)
-  void-bt-setup.sh          BlueZ pairing/trust helper (Linux)
-setup.sh                    Linux/macOS one-shot setup
-setup.ps1                   Windows one-shot setup
+  build-jar.sh              полная сборка телефонного приложения + загрузка
+  run-all.sh                запуск моста + прокси + панели
+  bt-proxy.js               мост BT SPP -> TCP :19741
+  bt-connect.js             исходящий набор с ПК (режим "Wait for PC")
+  void-bt-setup.sh          помощник пара/доверия для BlueZ (Linux)
+setup.sh                    одноразовая настройка для Linux/macOS
+setup.ps1                   одноразовая настройка для Windows
 ```
 
-## Wire protocol (RFCOMM SPP, UTF-8 lines ending in \n)
+## Протокол связи (RFCOMM SPP, UTF-8 строки через \n)
 
-Phone → PC:
+Телефон → ПК:
 
 ```
 HELLO Nokia6300 MIDlet-1.0
 VOICE:BEGIN <totalBytes>
-VOICE:DATA <base64 chunk, ~512 chars = 384 bytes audio>
+VOICE:DATA <base64-чанк, ~512 символов = 384 байта аудио>
 VOICE:END
-TEXT:<typed prompt>
+TEXT:<промпт с клавиатуры>
 CANCEL
 PING
 BYE
 ```
 
-PC → Phone:
+ПК → телефон:
 
 ```
 HELLO OpenCode-Bridge 1.0
-STATUS <short status line>
-PROGRESS <stage>|<pct 0-100>|<label>
-YOU <transcript line>
-TEXT <answer line>
-TOOL <tool activity>
+STATUS <короткая строка статуса>
+PROGRESS <этап>|<проценты 0-100>|<подпись>
+YOU <строка расшифровки>
+TEXT <строка ответа>
+TOOL <активность инструмента>
 DONE
-ERROR <message>
+ERROR <сообщение>
 PING
 ```
 
-Stages: `RECEIVING TRANSCRIBING SENDING WORKING DONE ERROR`.
-Audio is AMR-NB (MMAPI `capture://audio?encoding=amr`), max 30 s.
+Этапы: `RECEIVING TRANSCRIBING SENDING WORKING DONE ERROR`.
+Аудио — AMR-NB (MMAPI `capture://audio?encoding=amr`), максимум 30 с.
 
-## Web + TUI
+## Web и TUI
 
-The server plugin registers RPC id `nokia`:
+Серверный плагин регистрирует RPC с id `nokia`:
 
 ```sh
 opencode api post /api/rpc/nokia/status --data '{}'
-opencode api post /api/rpc/nokia/sendText --data '{"text":"list files"}'
+opencode api post /api/rpc/nokia/sendText --data '{"text":"перечисли файлы"}'
 ```
 
-TUI plugin adds a sidebar status line, `nokia` route, palette commands
-(`nokia.status`, `nokia.send`, `nokia.cancel`) and toasts.
-Dashboard (bridge-served): `http://127.0.0.1:4097/nokia`.
+TUI-плагин добавляет строку статуса в сайдбаре, route `nokia`,
+команды палитры (`nokia.status`, `nokia.send`, `nokia.cancel`) и
+уведомления. Веб-панель от моста: `http://127.0.0.1:4097/nokia`.
 
-## Troubleshooting
+## Решение проблем
 
-| Symptom | Fix |
+| Проблема | Решение |
 |---|---|
-| `br-connection-unknown` on connect | Phone BT off / out of range. Turn BT On + Visible, < 5 m away, retry. |
-| Phone can't find `OpenCode-Nokia` | Re-run the BT setup (discoverable times out after ~180 s). |
-| `GROQ_API_KEY` errors | `export GROQ_API_KEY=gsk_…` before starting. |
-| AMR rejected by Groq | Install `ffmpeg` — the bridge auto-converts AMR→WAV. |
-| `bluetooth-serial-port` build fails | Normal on some platforms. Bridge falls back to TCP `:19741`. Install build tools (`bluez`+headers on Linux, Xcode CLT on macOS, VS Build Tools on Windows) and retry `npm install bluetooth-serial-port`. |
-| MIDlet `SecurityException` on BT/mic | Answer "Always allow" at install; on S40 set Permissions → Bluetooth/Multimedia → Always allowed. |
+| `br-connection-unknown` при подключении | Bluetooth телефона выключен / вне зоны. Включите BT + видимость, держите телефон в 5 м, повторите. |
+| Телефон не находит `OpenCode-Nokia` | Перезапустите BT-настройку (видимость истекает примерно через 180 с). |
+| Ошибки `GROQ_API_KEY` | `export GROQ_API_KEY=gsk_…` перед запуском. |
+| Groq отклоняет AMR | Установите `ffmpeg` — мост сам конвертирует AMR→WAV. |
+| Сборка `bluetooth-serial-port` падает | Нормально для некоторых платформ. Мост переключается на TCP `:19741`. Поставьте тулчейн (в Linux — `bluez` + заголовки, в macOS — Xcode CLT, в Windows — VS Build Tools) и повторите `npm install bluetooth-serial-port`. |
+| `SecurityException` в MIDlet на BT/микрофоне | При установке ответьте «Всегда разрешать»; на S40: Разрешения → Bluetooth/Мультимедиа → Всегда разрешать. |
 
-## License
+## Лицензия
 
-MIT — see LICENSE.
+MIT — см. LICENSE.
