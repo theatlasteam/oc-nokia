@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Build with Sun WTK 2.5.2 or MicroEmulator + JDK 8.
+     Usage: ant jar   (output in bin/) -->
+<project name="NokiaOpenCode" default="jar" basedir=".">
+  <property name="src" value="src"/>
+  <property name="build" value="build"/>
+  <property name="bin" value="bin"/>
+  <property name="wtk" value="/opt/WTK2.5.2"/>
+  <property name="cldc" value="${wtk}/lib/cldcapi11.jar"/>
+  <property name="midp" value="${wtk}/lib/midpapi20.jar"/>
+  <property name="mmapi" value="${wtk}/lib/mmapi.jar"/>
+  <property name="btapi" value="${wtk}/lib/jsr082.jar"/>
+
+  <target name="clean">
+    <delete dir="${build}"/>
+    <delete dir="${bin}"/>
+  </target>
+
+  <target name="compile">
+    <mkdir dir="${build}/classes"/>
+    <javac srcdir="${src}" destdir="${build}/classes"
+           source="1.3" target="1.3" bootclasspath="${cldc}:${midp}:${mmapi}:${btapi}"
+           includeantruntime="false" debug="false" optimize="true">
+      <include name="com/nokia/opencode/*.java"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+    <mkdir dir="${bin}"/>
+    <!-- preverify with the WTK preverifier, required for CLDC -->
+    <exec executable="${wtk}/bin/preverify">
+      <arg value="-classpath"/>
+      <arg value="${cldc}:${midp}:${mmapi}:${btapi}"/>
+      <arg value="-d"/>
+      <arg value="${build}/verified"/>
+      <arg value="${build}/classes"/>
+    </exec>
+    <jar destfile="${bin}/NokiaOpenCode.jar"
+         manifest="META-INF/MANIFEST.MF"
+         basedir="${build}/verified"/>
+    <echo message="Update NokiaOpenCode.jad MIDlet-Jar-Size with the jar size:"/>
+    <length file="${bin}/NokiaOpenCode.jar" property="jarsize"/>
+    <echo message="MIDlet-Jar-Size: ${jarsize}"/>
+  </target>
+</project>

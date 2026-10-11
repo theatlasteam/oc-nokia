@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugins": ["./opencode-nokia-plugin"],
+  "pluginOptions": {
+    "nokia-bridge": {
+      "tcpPort": 19741,
+      "dashboardPort": 4097,
+      "whisperModel": "whisper-large-v3-turbo"
+    }
+  }
+}

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="opencode-logo.svg">
+<title>Nokia 6300 · OpenCode Remote</title>
+<style>
+  :root {
+    --bg: #101014; --panel: #1b1e26; --line: #2a2f3a;
+    --accent: #5aa9ff; --text: #f2f4f8; --dim: #9aa0aa;
+    --ok: #52d273; --err: #ff6b6b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    max-width: 680px; margin: 0 auto; padding: 2em 1em 4em;
+    background: var(--bg); color: var(--text);
+  }
+  header.brand {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; background: var(--panel);
+    border: 1px solid var(--line); border-radius: 12px;
+  }
+  header.brand img { height: 34px; }
+  header.brand .sub { color: var(--dim); font-size: .8em; letter-spacing: .2em; }
+  .card {
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 1em 1.1em; margin: 1em 0; background: var(--panel);
+  }
+  .card h2 { font-size: .8em; text-transform: uppercase; letter-spacing: .15em;
+             color: var(--dim); margin: 0 0 .6em; }
+  .row { display: flex; align-items: center; gap: .6em; margin: .35em 0; }
+  .dot { font-size: 1.2em; line-height: 1; }
+  .on { color: var(--ok); } .off { color: var(--err); }
+  .bar { background: #0b0d12; border: 1px solid var(--line);
+         border-radius: 8px; height: 20px; overflow: hidden; margin-top: .6em; }
+  .bar > div {
+    height: 100%; width: 0%;
+    background: repeating-linear-gradient(-55deg, var(--accent) 0 8px, #8fc2ff 8px 16px);
+    transition: width .3s;
+  }
+  .bar.idle > div { background: var(--line); }
+  #transcript { min-height: 1.4em; }
+  #tail { white-space: pre-wrap; font-size: .85em; color: var(--text);
+          max-height: 260px; overflow-y: auto; margin: 0; }
+  .sendrow { display: flex; gap: .6em; }
+  input {
+    flex: 1; font: inherit; padding: .55em .8em; color: var(--text);
+    background: #0b0d12; border: 1px solid var(--line); border-radius: 8px;
+  }
+  button {
+    font: inherit; padding: .55em 1.1em; cursor: pointer; color: #06121f;
+    background: var(--accent); border: 0; border-radius: 8px; font-weight: bold;
+  }
+  button:hover { filter: brightness(1.1); }
+  code { color: var(--accent); }
+  .hint { color: var(--dim); font-size: .82em; }
+  #sendStatus { min-height: 1.2em; }
+</style>
+</head>
+<body>
+
+<header class="brand">
+  <img src="opencode-logo.svg" alt="opencode">
+  <div>
+    <div><b>Voice Remote</b></div>
+    <div class="sub">NOKIA 6300</div>
+  </div>
+</header>
+
+<p class="hint">Same live view as the phone screen. Bridge RPC:
+<code>POST /api/rpc/nokia/*</code> on the opencode server (:4096).
+This page polls the bridge directly.</p>
+
+<div class="card">
+  <h2>Link</h2>
+  <div class="row">
+    <span id="link" class="dot off">●</span>
+    <span id="phone">disconnected</span>
+  </div>
+  <div class="row"><b id="stage">IDLE</b><span id="pct">0%</span><span id="label"></span></div>
+  <div class="bar idle" id="barwrap"><div id="fill"></div></div>
+  <div class="row hint">Groq Whisper: <span id="groq">?</span></div>
+</div>
+
+<div class="card">
+  <h2>Heard (transcript)</h2>
+  <p id="transcript">—</p>
+</div>
+
+<div class="card">
+  <h2>Answer</h2>
+  <pre id="tail">—</pre>
+</div>
+
+<div class="card">
+  <h2>Send prompt (web → phone shows progress)</h2>
+  <div class="sendrow">
+    <input id="text" placeholder="list files in src/" onkeydown="if(event.key==='Enter')send()">
+    <button onclick="send()">Send</button>
+  </div>
+  <p id="sendStatus" class="hint"></p>
+</div>
+
+<script>
+async function poll() {
+  try {
+    const r = await fetch('/nokia/status');
+    const s = await r.json();
+    const link = document.getElementById('link');
+    link.className = 'dot ' + (s.connected ? 'on' : 'off');
+    document.getElementById('phone').textContent = s.connected ? s.phone : 'disconnected';
+    document.getElementById('stage').textContent = s.stage;
+    document.getElementById('pct').textContent = s.pct + '%';
+    document.getElementById('label').textContent = '— ' + (s.label || '');
+    document.getElementById('fill').style.width = s.pct + '%';
+    document.getElementById('barwrap').className =
+      'bar' + ((s.stage === 'IDLE' || s.stage === 'DONE') ? ' idle' : '');
+    document.getElementById('groq').textContent = s.groq ? 'configured' : 'MISSING GROQ_API_KEY';
+    document.getElementById('transcript').textContent = s.lastTranscript || '—';
+    document.getElementById('tail').textContent = (s.answerTail || []).join('\n') || '—';
+  } catch (e) { /* bridge restarting */ }
+}
+setInterval(poll, 1500); poll();
+
+async function send() {
+  const text = document.getElementById('text').value;
+  const st = document.getElementById('sendStatus');
+  if (!text.trim()) { st.textContent = 'type something first.'; return; }
+  try {
+    const r = await fetch('/nokia/rpc/sendText', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    st.textContent = r.ok ? 'sent — watch the phone.' : 'failed: ' + await r.text();
+  } catch (e) { st.textContent = 'bridge not reachable — is the plugin loaded?'; }
+}
+</script>
+</body>
+</html>

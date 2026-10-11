@@ -1,0 +1,44 @@
+{
+  "name": "opencode-nokia-plugin",
+  "version": "1.0.2",
+  "description": "Control OpenCode from a Nokia 6300 over Bluetooth: voice notes via Groq Whisper, live progress back on the phone. Server + TUI + Web.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./rpc": "./src/rpc.ts",
+    "./tui": "./src/tui.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "bridge": "bun ./standalone-bridge.mjs"
+  },
+  "dependencies": {
+    "@opencode/plugin": "latest"
+  },
+  "optionalDependencies": {
+    "bluetooth-serial-port": "^3.0.6"
+  },
+  "devDependencies": {
+    "@opentui/core": "^0.5.17",
+    "@opentui/solid": "^0.5.17",
+    "@types/node": "^26.6.5",
+    "solid-js": "^1.9.9",
+    "typescript": "^7.0.2"
+  },
+  "peerDependencies": {
+    "@opentui/core": ">=0.5.8",
+    "@opentui/solid": ">=0.5.8",
+    "solid-js": ">=1.9.0"
+  },
+  "peerDependenciesMeta": {
+    "@opentui/core": {
+      "optional": true
+    },
+    "@opentui/solid": {
+      "optional": true
+    },
+    "solid-js": {
+      "optional": true
+    }
+  }
+}

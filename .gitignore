@@ -1,0 +1,10 @@
+# JS deps
+opencode-nokia-plugin/node_modules/
+
+# Build outputs (prebuilt jar/jad in NokiaOpenCode/bin/ are committed on purpose)
+*.class
+*.log
+
+# OS noise
+.DS_Store
+Thumbs.db

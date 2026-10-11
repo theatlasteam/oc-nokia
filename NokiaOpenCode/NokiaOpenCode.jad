@@ -1,0 +1,11 @@
+MIDlet-Name: OpenCode Remote
+MIDlet-Version: 1.5.0
+MIDlet-Vendor: OpenCode
+MIDlet-Description: Control OpenCode over Bluetooth with voice notes (Nokia 6300)
+MIDlet-1: OpenCode Remote,,com.nokia.opencode.OpenCodeMIDlet
+MIDlet-Jar-URL: NokiaOpenCode.jar
+MIDlet-Jar-Size: 23380
+MicroEdition-Profile: MIDP-2.0
+MicroEdition-Configuration: CLDC-1.1
+MIDlet-Permissions: javax.microedition.io.Connector.bluetooth.client, javax.microedition.io.Connector.serversocket, javax.microedition.io.Connector.socket, javax.microedition.media.control.RecordControl
+TcpHost:
